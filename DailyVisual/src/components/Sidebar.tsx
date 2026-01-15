@@ -4,10 +4,13 @@
  */
 'use client'
 
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Calendar } from '@/components/ui/calendar'
 import { useDate } from '@/contexts/DateContext'
-import { format } from 'date-fns'
+import { useEntry } from '@/contexts/EntryContext'
+import { createClient } from '@/utils/supabase/client'
+import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 
 interface SidebarProps {
@@ -16,6 +19,31 @@ interface SidebarProps {
 
 export default function Sidebar({ displayName }: SidebarProps) {
   const { selectedDate, setSelectedDate } = useDate()
+  const { refreshKey } = useEntry()
+  const [datesWithContent, setDatesWithContent] = useState<Date[]>([])
+
+  // 获取当月有内容的日期
+  useEffect(() => {
+    const fetchDatesWithContent = async () => {
+      const supabase = createClient()
+      const monthStart = format(startOfMonth(selectedDate), 'yyyy-MM-dd')
+      const monthEnd = format(endOfMonth(selectedDate), 'yyyy-MM-dd')
+
+      const { data } = await supabase
+        .from('entries')
+        .select('date')
+        .gte('date', monthStart)
+        .lte('date', monthEnd)
+
+      if (data) {
+        // 去重并转换为 Date 对象
+        const uniqueDates = [...new Set(data.map(entry => entry.date))]
+        setDatesWithContent(uniqueDates.map(d => new Date(d + 'T00:00:00')))
+      }
+    }
+
+    fetchDatesWithContent()
+  }, [selectedDate, refreshKey])
 
   return (
     <aside className="hidden lg:flex flex-col w-80 border-r border-foreground/10 h-screen sticky top-0">
@@ -52,6 +80,9 @@ export default function Sidebar({ displayName }: SidebarProps) {
           onSelect={(date) => date && setSelectedDate(date)}
           className="w-full"
           locale={zhCN}
+          modifiers={{
+            hasContent: datesWithContent,
+          }}
         />
       </div>
 
