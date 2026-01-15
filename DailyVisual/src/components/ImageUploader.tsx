@@ -1,6 +1,7 @@
 /**
  * 图片上传器组件
  * 支持拖拽上传（桌面端）和点击选择（移动端）
+ * 预览图片完整显示
  */
 'use client'
 
@@ -76,20 +77,33 @@ export default function ImageUploader({
   // 生成预览 URL
   const getPreviewUrl = (file: File) => URL.createObjectURL(file)
 
+  // 根据图片数量决定网格布局
+  const getGridClass = () => {
+    if (images.length === 1) return 'grid-cols-1'
+    if (images.length === 2) return 'grid-cols-2'
+    return 'grid-cols-3'
+  }
+
   return (
     <div className="space-y-3">
       {/* 已选图片预览 */}
       {images.length > 0 && (
-        <div className="grid grid-cols-3 gap-2">
+        <div className={`grid ${getGridClass()} gap-2`}>
           {images.map((file, index) => (
             <div
               key={index}
-              className="relative aspect-square rounded-lg overflow-hidden bg-foreground/5"
+              className={`relative rounded-lg overflow-hidden bg-foreground/5 ${
+                images.length === 1 ? '' : 'aspect-square'
+              }`}
             >
               <img
                 src={getPreviewUrl(file)}
                 alt={`预览 ${index + 1}`}
-                className="w-full h-full object-cover"
+                className={`w-full object-contain ${
+                  images.length === 1 
+                    ? 'h-auto max-h-[200px]' 
+                    : 'h-full'
+                }`}
               />
               {/* 删除按钮 */}
               <Button
@@ -144,4 +158,3 @@ export default function ImageUploader({
     </div>
   )
 }
-

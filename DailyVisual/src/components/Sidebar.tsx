@@ -4,6 +4,7 @@
  */
 'use client'
 
+import Image from 'next/image'
 import { Calendar } from '@/components/ui/calendar'
 import { useDate } from '@/contexts/DateContext'
 import { format } from 'date-fns'
@@ -17,34 +18,27 @@ export default function Sidebar({ displayName }: SidebarProps) {
   const { selectedDate, setSelectedDate } = useDate()
 
   return (
-    <aside className="hidden lg:flex flex-col w-72 border-r border-foreground/10 h-screen sticky top-0">
+    <aside className="hidden lg:flex flex-col w-80 border-r border-foreground/10 h-screen sticky top-0">
       {/* Logo 区域 */}
       <div className="p-6 border-b border-foreground/10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center">
-            <svg
-              className="w-5 h-5 text-background"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-              />
-            </svg>
-          </div>
+          {/* Logo 图片 */}
+          <Image
+            src="/logo-1.jpg"
+            alt="Logo"
+            width={40}
+            height={40}
+            className="rounded-full"
+          />
           <div>
             <h1 className="font-bold text-lg">DailyVisual</h1>
-            <p className="text-xs text-muted-foreground">团队视觉日志</p>
+            <p className="text-xs text-muted-foreground">每日分享素材</p>
           </div>
         </div>
       </div>
 
       {/* 日历区域 */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 px-4 py-4">
         <div className="mb-4">
           <p className="text-sm text-muted-foreground">选中日期</p>
           <p className="text-xl font-semibold">
@@ -56,7 +50,7 @@ export default function Sidebar({ displayName }: SidebarProps) {
           mode="single"
           selected={selectedDate}
           onSelect={(date) => date && setSelectedDate(date)}
-          className="rounded-md border border-foreground/10"
+          className="w-full"
           locale={zhCN}
         />
       </div>

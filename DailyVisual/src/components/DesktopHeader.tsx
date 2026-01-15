@@ -1,6 +1,6 @@
 /**
  * 桌面端头部
- * 显示当前日期和用户操作
+ * 显示当前日期、星期、备注和用户操作
  */
 'use client'
 
@@ -12,6 +12,7 @@ import { useEntry } from '@/contexts/EntryContext'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
+import { getDayNote } from '@/utils/getDayNote'
 
 interface DesktopHeaderProps {
   displayName: string
@@ -21,6 +22,10 @@ export default function DesktopHeader({ displayName }: DesktopHeaderProps) {
   const { selectedDate } = useDate()
   const { openDialog } = useEntry()
   const router = useRouter()
+
+  // 获取星期几和备注
+  const weekDay = format(selectedDate, 'EEEE', { locale: zhCN })
+  const dayNote = getDayNote(selectedDate)
 
   // 处理登出
   const handleLogout = async () => {
@@ -33,13 +38,19 @@ export default function DesktopHeader({ displayName }: DesktopHeaderProps) {
   return (
     <header className="hidden lg:flex items-center justify-between h-16 px-6 border-b border-foreground/10 sticky top-0 bg-background z-10">
       {/* 左侧：当前日期 */}
-      <div>
-        <h2 className="text-xl font-semibold">
-          {format(selectedDate, 'yyyy年M月d日', { locale: zhCN })}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {format(selectedDate, 'EEEE', { locale: zhCN })}
-        </p>
+      <div className="flex items-center gap-4">
+        <div>
+          <h2 className="text-xl font-semibold">
+            {format(selectedDate, 'yyyy年M月d日', { locale: zhCN })}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {weekDay}
+          </p>
+        </div>
+        {/* 备注标签 */}
+        <div className="px-3 py-1 bg-foreground/5 rounded-full">
+          <span className="text-sm text-muted-foreground">{dayNote}</span>
+        </div>
       </div>
 
       {/* 右侧：操作按钮 */}

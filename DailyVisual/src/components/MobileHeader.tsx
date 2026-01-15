@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/sheet'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
+import { getDayNote } from '@/utils/getDayNote'
 
 interface MobileHeaderProps {
   displayName: string
@@ -34,6 +35,10 @@ export default function MobileHeader({ displayName }: MobileHeaderProps) {
   const { selectedDate, setSelectedDate } = useDate()
   const [calendarOpen, setCalendarOpen] = useState(false)
   const router = useRouter()
+
+  // 获取星期几和备注
+  const weekDay = format(selectedDate, 'EEEE', { locale: zhCN })
+  const dayNote = getDayNote(selectedDate)
 
   // 处理登出
   const handleLogout = async () => {
@@ -108,31 +113,35 @@ export default function MobileHeader({ displayName }: MobileHeaderProps) {
           </SheetContent>
         </Sheet>
 
-        {/* 中间：日期选择器 */}
-        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className="font-semibold text-base gap-2"
-            >
-              <CalendarIcon className="h-4 w-4" />
-              {format(selectedDate, 'M月d日', { locale: zhCN })}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => {
-                if (date) {
-                  setSelectedDate(date)
-                  setCalendarOpen(false)
-                }
-              }}
-              locale={zhCN}
-            />
-          </PopoverContent>
-        </Popover>
+        {/* 中间：日期选择器 + 备注 */}
+        <div className="flex flex-col items-center">
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                className="font-semibold text-base gap-2 h-auto py-1"
+              >
+                <CalendarIcon className="h-4 w-4" />
+                {format(selectedDate, 'M月d日', { locale: zhCN })} {weekDay}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setSelectedDate(date)
+                    setCalendarOpen(false)
+                  }
+                }}
+                locale={zhCN}
+              />
+            </PopoverContent>
+          </Popover>
+          {/* 备注 */}
+          <span className="text-xs text-muted-foreground">{dayNote}</span>
+        </div>
 
         {/* 右侧：占位（保持对称） */}
         <div className="w-10" />
@@ -140,4 +149,3 @@ export default function MobileHeader({ displayName }: MobileHeaderProps) {
     </header>
   )
 }
-

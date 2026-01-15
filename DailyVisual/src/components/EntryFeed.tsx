@@ -110,16 +110,6 @@ export default function EntryFeed({ userId }: EntryFeedProps) {
 
   return (
     <div className="max-w-2xl mx-auto">
-      {/* 日期标题（移动端显示） */}
-      <div className="lg:hidden mb-6">
-        <h2 className="text-lg font-semibold">
-          {getDateLabel(selectedDate)}的记录
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          共 {entries.length} 条记录
-        </p>
-      </div>
-
       {/* 日志列表 */}
       {entries.length > 0 ? (
         <div className="space-y-4">

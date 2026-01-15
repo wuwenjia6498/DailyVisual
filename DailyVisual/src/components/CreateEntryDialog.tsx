@@ -151,14 +151,14 @@ export default function CreateEntryDialog({
         <DialogHeader>
           <DialogTitle>添加记录</DialogTitle>
           <DialogDescription>
-            记录 {format(selectedDate, 'M月d日 EEEE', { locale: zhCN })} 的内容
+            {format(selectedDate, 'M月d日 EEEE', { locale: zhCN })} 的内容
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {/* 文本输入 */}
           <Textarea
-            placeholder="写点什么..."
+            placeholder="文字部分"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="min-h-[120px] resize-none"

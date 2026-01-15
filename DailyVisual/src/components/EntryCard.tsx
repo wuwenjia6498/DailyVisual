@@ -1,12 +1,11 @@
 /**
  * 日志卡片组件
  * 展示单条日志的完整内容
+ * 支持删除图片
  */
 'use client'
 
 import { useState } from 'react'
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
 import { Copy, Check, MoreHorizontal, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -17,17 +16,20 @@ import {
 } from '@/components/ui/popover'
 import ImageGrid from './ImageGrid'
 import { linkifyText } from '@/utils/linkify'
-import type { EntryWithDetails } from '@/types/database'
+import { createClient } from '@/utils/supabase/client'
+import type { EntryWithDetails, Image } from '@/types/database'
 
 interface EntryCardProps {
   entry: EntryWithDetails
   currentUserId: string
   onDelete?: (entryId: string) => void
+  onImageDeleted?: () => void
 }
 
-export default function EntryCard({ entry, currentUserId, onDelete }: EntryCardProps) {
+export default function EntryCard({ entry, currentUserId, onDelete, onImageDeleted }: EntryCardProps) {
   const [copied, setCopied] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [images, setImages] = useState<Image[]>(entry.images || [])
 
   // 是否为当前用户的日志
   const isOwner = entry.user_id === currentUserId
@@ -51,10 +53,27 @@ export default function EntryCard({ entry, currentUserId, onDelete }: EntryCardP
     setMenuOpen(false)
   }
 
-  // 格式化时间
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return format(date, 'HH:mm', { locale: zhCN })
+  // 删除单张图片
+  const handleDeleteImage = async (imageId: string, storagePath: string) => {
+    const supabase = createClient()
+
+    // 删除 Storage 中的图片
+    await supabase.storage.from('images').remove([storagePath])
+
+    // 删除数据库记录
+    const { error } = await supabase
+      .from('images')
+      .delete()
+      .eq('id', imageId)
+
+    if (error) {
+      console.error('删除图片失败:', error)
+      alert('删除失败，请重试')
+    } else {
+      // 更新本地状态
+      setImages(prev => prev.filter(img => img.id !== imageId))
+      onImageDeleted?.()
+    }
   }
 
   return (
@@ -75,30 +94,28 @@ export default function EntryCard({ entry, currentUserId, onDelete }: EntryCardP
                 entry.profiles.display_name.charAt(0).toUpperCase()
               )}
             </div>
-            {/* 名称和时间 */}
-            <div>
-              <p className="font-medium text-sm">{entry.profiles.display_name}</p>
-              <p className="text-xs text-muted-foreground">
-                {formatTime(entry.created_at)}
-              </p>
-            </div>
+            {/* 名称 */}
+            <p className="font-medium text-sm">{entry.profiles.display_name}</p>
           </div>
 
           {/* 操作菜单 */}
           <div className="flex items-center gap-1">
-            {/* 复制按钮 */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              onClick={handleCopyText}
-            >
-              {copied ? (
-                <Check className="h-4 w-4 text-green-500" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </Button>
+            {/* 复制文本按钮 */}
+            {entry.content && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={handleCopyText}
+                title="复制文本"
+              >
+                {copied ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            )}
 
             {/* 更多操作（仅限日志所有者） */}
             {isOwner && (
@@ -119,7 +136,7 @@ export default function EntryCard({ entry, currentUserId, onDelete }: EntryCardP
                     onClick={handleDelete}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    删除
+                    删除日志
                   </Button>
                 </PopoverContent>
               </Popover>
@@ -130,16 +147,28 @@ export default function EntryCard({ entry, currentUserId, onDelete }: EntryCardP
 
       <CardContent className="pt-0">
         {/* 文本内容 */}
-        <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-          {linkifyText(entry.content)}
-        </div>
+        {entry.content && (
+          <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+            {linkifyText(entry.content)}
+          </div>
+        )}
+
+        {/* 分隔线（文字和图片都存在时显示） */}
+        {entry.content && images.length > 0 && (
+          <div className="py-4">
+            <div className="border-t border-dashed border-foreground/20" />
+          </div>
+        )}
 
         {/* 图片网格 */}
-        {entry.images && entry.images.length > 0 && (
-          <ImageGrid images={entry.images} />
+        {images.length > 0 && (
+          <ImageGrid 
+            images={images} 
+            canDelete={isOwner}
+            onDeleteImage={handleDeleteImage}
+          />
         )}
       </CardContent>
     </Card>
   )
 }
-
