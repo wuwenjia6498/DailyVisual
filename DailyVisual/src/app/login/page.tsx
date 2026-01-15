@@ -1,0 +1,148 @@
+/**
+ * 登录页面
+ * 极简风格的邮箱/密码登录表单
+ * 无注册功能（仅限预设用户）
+ */
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/utils/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Loader2 } from 'lucide-react'
+
+export default function LoginPage() {
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  // 处理登录
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        setError('邮箱或密码错误')
+        return
+      }
+
+      // 登录成功，跳转到首页
+      router.push('/')
+      router.refresh()
+    } catch {
+      setError('登录时发生错误，请重试')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      {/* 登录卡片 */}
+      <Card className="w-full max-w-md border-2 border-foreground/10">
+        <CardHeader className="space-y-1 text-center">
+          {/* Logo / 标题 */}
+          <div className="flex justify-center mb-4">
+            <div className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-background"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
+            </div>
+          </div>
+          <CardTitle className="text-2xl font-bold tracking-tight">
+            DailyVisual
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            团队视觉日志
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
+            {/* 邮箱输入 */}
+            <div className="space-y-2">
+              <Label htmlFor="email">邮箱</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+                className="h-11"
+              />
+            </div>
+
+            {/* 密码输入 */}
+            <div className="space-y-2">
+              <Label htmlFor="password">密码</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+                className="h-11"
+              />
+            </div>
+
+            {/* 错误提示 */}
+            {error && (
+              <div className="text-sm text-red-500 text-center bg-red-50 dark:bg-red-950/20 py-2 px-3 rounded-md">
+                {error}
+              </div>
+            )}
+
+            {/* 登录按钮 */}
+            <Button
+              type="submit"
+              className="w-full h-11 font-medium"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  登录中...
+                </>
+              ) : (
+                '登录'
+              )}
+            </Button>
+          </form>
+
+          {/* 底部提示 */}
+          <p className="text-xs text-muted-foreground text-center mt-6">
+            仅限团队成员登录
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
