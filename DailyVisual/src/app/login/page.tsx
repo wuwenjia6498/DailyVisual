@@ -1,6 +1,6 @@
 /**
  * 登录页面
- * 极简风格的邮箱/密码登录表单
+ * 极简风格的用户名/密码登录表单
  * 无注册功能（仅限预设用户）
  */
 'use client'
@@ -15,9 +15,12 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
 
+// 邮箱后缀（管理员在 Supabase 创建用户时使用此后缀）
+const EMAIL_SUFFIX = '@hui-ben.com'
+
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -30,13 +33,16 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
+      // 自动拼接邮箱后缀
+      const email = username.includes('@') ? username : `${username}${EMAIL_SUFFIX}`
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
-        setError('邮箱或密码错误')
+        setError('用户名或密码错误')
         return
       }
 
@@ -75,15 +81,15 @@ export default function LoginPage() {
 
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
-            {/* 邮箱输入 */}
+            {/* 用户名输入 */}
             <div className="space-y-2">
-              <Label htmlFor="email">邮箱</Label>
+              <Label htmlFor="username">用户名</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="text"
+                placeholder="请输入用户名"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 disabled={loading}
                 className="h-11"
