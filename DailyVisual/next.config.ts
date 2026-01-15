@@ -1,8 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  // reactCompiler: true, // 暂时禁用，等待 Turbopack 兼容性修复
+  // 图片域名配置
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'fqkdpsdtadrkqrcezdxq.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;
