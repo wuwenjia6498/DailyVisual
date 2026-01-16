@@ -4,11 +4,12 @@
  */
 'use client'
 
-import { useState } from 'react'
-import { format } from 'date-fns'
+import { useState, useEffect } from 'react'
+import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { CalendarIcon, Menu, LogOut } from 'lucide-react'
 import { useDate } from '@/contexts/DateContext'
+import { useEntry } from '@/contexts/EntryContext'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -33,8 +34,33 @@ interface MobileHeaderProps {
 
 export default function MobileHeader({ displayName }: MobileHeaderProps) {
   const { selectedDate, setSelectedDate } = useDate()
+  const { refreshKey } = useEntry()
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [datesWithContent, setDatesWithContent] = useState<Date[]>([])
   const router = useRouter()
+
+  // 获取当月有内容的日期
+  useEffect(() => {
+    const fetchDatesWithContent = async () => {
+      const supabase = createClient()
+      const monthStart = format(startOfMonth(selectedDate), 'yyyy-MM-dd')
+      const monthEnd = format(endOfMonth(selectedDate), 'yyyy-MM-dd')
+
+      const { data } = await supabase
+        .from('entries')
+        .select('date')
+        .gte('date', monthStart)
+        .lte('date', monthEnd)
+
+      if (data) {
+        // 去重并转换为 Date 对象
+        const uniqueDates = [...new Set(data.map(entry => entry.date))]
+        setDatesWithContent(uniqueDates.map(d => new Date(d + 'T00:00:00')))
+      }
+    }
+
+    fetchDatesWithContent()
+  }, [selectedDate, refreshKey])
 
   // 获取星期几和备注
   const weekDay = format(selectedDate, 'EEEE', { locale: zhCN })
@@ -88,6 +114,9 @@ export default function MobileHeader({ displayName }: MobileHeaderProps) {
                 onSelect={(date) => date && setSelectedDate(date)}
                 className="rounded-md border border-foreground/10"
                 locale={zhCN}
+                modifiers={{
+                  hasContent: datesWithContent,
+                }}
               />
             </div>
 
@@ -136,6 +165,9 @@ export default function MobileHeader({ displayName }: MobileHeaderProps) {
                   }
                 }}
                 locale={zhCN}
+                modifiers={{
+                  hasContent: datesWithContent,
+                }}
               />
             </PopoverContent>
           </Popover>
