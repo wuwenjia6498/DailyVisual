@@ -20,8 +20,8 @@ const geistMono = Geist_Mono({
 
 // 页面元数据
 export const metadata: Metadata = {
-  title: 'DailyVisual - 团队视觉日志',
-  description: '一个简约的团队共享视觉日志应用',
+  title: '老约翰每日分享素材',
+  description: '老约翰的每日视觉素材分享平台',
 }
 
 export default function RootLayout({
