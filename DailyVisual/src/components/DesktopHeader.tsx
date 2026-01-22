@@ -27,13 +27,16 @@ export default function DesktopHeader({ displayName }: DesktopHeaderProps) {
   const weekDay = format(selectedDate, 'EEEE', { locale: zhCN })
   const dayNote = getDayNote(selectedDate)
 
+  // ===== 临时禁用登出功能 =====
   // 处理登出
   const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    // const supabase = createClient()
+    // await supabase.auth.signOut()
+    // router.push('/login')
+    // router.refresh()
+    alert('登录功能已临时禁用')
   }
+  // ===== 结束：临时禁用登出功能 =====
 
   return (
     <header className="hidden lg:flex items-center justify-between h-16 px-6 border-b border-foreground/10 sticky top-0 bg-background z-10">

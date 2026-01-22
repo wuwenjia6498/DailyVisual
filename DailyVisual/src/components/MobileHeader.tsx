@@ -66,13 +66,16 @@ export default function MobileHeader({ displayName }: MobileHeaderProps) {
   const weekDay = format(selectedDate, 'EEEE', { locale: zhCN })
   const dayNote = getDayNote(selectedDate)
 
+  // ===== 临时禁用登出功能 =====
   // 处理登出
   const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    // const supabase = createClient()
+    // await supabase.auth.signOut()
+    // router.push('/login')
+    // router.refresh()
+    alert('登录功能已临时禁用')
   }
+  // ===== 结束：临时禁用登出功能 =====
 
   return (
     <header className="lg:hidden sticky top-0 z-50 bg-background border-b border-foreground/10">
