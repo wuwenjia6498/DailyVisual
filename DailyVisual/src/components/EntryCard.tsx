@@ -6,7 +6,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Copy, Check, MoreHorizontal, Trash2 } from 'lucide-react'
+import { Copy, Check, MoreHorizontal, Trash2, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import {
@@ -23,10 +23,11 @@ interface EntryCardProps {
   entry: EntryWithDetails
   currentUserId: string
   onDelete?: (entryId: string) => void
+  onEdit?: (entry: EntryWithDetails) => void
   onImageDeleted?: () => void
 }
 
-export default function EntryCard({ entry, currentUserId, onDelete, onImageDeleted }: EntryCardProps) {
+export default function EntryCard({ entry, currentUserId, onDelete, onEdit, onImageDeleted }: EntryCardProps) {
   const [copied, setCopied] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [images, setImages] = useState<Image[]>(entry.images || [])
@@ -43,6 +44,18 @@ export default function EntryCard({ entry, currentUserId, onDelete, onImageDelet
     } catch (error) {
       console.error('复制失败:', error)
     }
+  }
+
+  // 编辑日志
+  const handleEdit = () => {
+    if (onEdit) {
+      // 传入当前日志的最新数据（包含更新后的图片列表）
+      onEdit({
+        ...entry,
+        images: images,
+      })
+    }
+    setMenuOpen(false)
   }
 
   // 删除日志
@@ -130,6 +143,14 @@ export default function EntryCard({ entry, currentUserId, onDelete, onImageDelet
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-40 p-1" align="end">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start hover:bg-foreground/5"
+                    onClick={handleEdit}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    编辑日志
+                  </Button>
                   <Button
                     variant="ghost"
                     className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"

@@ -20,7 +20,7 @@ interface EntryFeedProps {
 
 export default function EntryFeed({ userId }: EntryFeedProps) {
   const { selectedDate } = useDate()
-  const { refreshKey } = useEntry()
+  const { refreshKey, openEditDialog } = useEntry()
   const [entries, setEntries] = useState<EntryWithDetails[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -64,6 +64,11 @@ export default function EntryFeed({ userId }: EntryFeedProps) {
   useEffect(() => {
     fetchEntries()
   }, [fetchEntries, refreshKey])
+
+  // 编辑日志
+  const handleEditEntry = (entry: EntryWithDetails) => {
+    openEditDialog(entry)
+  }
 
   // 删除日志
   const handleDeleteEntry = async (entryId: string) => {
@@ -119,6 +124,8 @@ export default function EntryFeed({ userId }: EntryFeedProps) {
               entry={entry}
               currentUserId={userId}
               onDelete={handleDeleteEntry}
+              onEdit={handleEditEntry}
+              onImageDeleted={fetchEntries}
             />
           ))}
         </div>

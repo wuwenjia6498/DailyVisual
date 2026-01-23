@@ -24,7 +24,7 @@ function LayoutContent({
   displayName,
   userId,
 }: DashboardLayoutProps) {
-  const { dialogOpen, closeDialog, triggerRefresh } = useEntry()
+  const { dialogOpen, editEntry, closeDialog, triggerRefresh } = useEntry()
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,12 +45,13 @@ function LayoutContent({
         </main>
       </div>
 
-      {/* 发布对话框 */}
+      {/* 发布/编辑对话框 */}
       <CreateEntryDialog
         open={dialogOpen}
         onOpenChange={(open) => !open && closeDialog()}
         userId={userId}
         onSuccess={triggerRefresh}
+        editEntry={editEntry || undefined}
       />
     </div>
   )

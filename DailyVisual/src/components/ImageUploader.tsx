@@ -2,25 +2,38 @@
  * 图片上传器组件
  * 支持拖拽上传（桌面端）和点击选择（移动端）
  * 预览图片完整显示
+ * 支持编辑模式：显示已存在的图片
  */
 'use client'
 
 import { useCallback, useState } from 'react'
 import { ImagePlus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import type { Image } from '@/types/database'
+
+// 图片项类型：可以是新上传的文件或已存在的图片
+export type ImageItem = File | Image
 
 interface ImageUploaderProps {
-  images: File[]
-  onChange: (images: File[]) => void
+  images: ImageItem[]
+  onChange: (images: ImageItem[]) => void
   maxImages?: number
+  onDeleteExisting?: (imageId: string, storagePath: string) => Promise<void>
 }
 
 export default function ImageUploader({
   images,
   onChange,
   maxImages = 9,
+  onDeleteExisting,
 }: ImageUploaderProps) {
   const [isDragging, setIsDragging] = useState(false)
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
+
+  // 判断是否为已存在的图片
+  const isExistingImage = (item: ImageItem): item is Image => {
+    return 'id' in item && 'url' in item
+  }
 
   // 处理文件选择
   const handleFileSelect = useCallback(
@@ -67,15 +80,41 @@ export default function ImageUploader({
 
   // 移除图片
   const removeImage = useCallback(
-    (index: number) => {
-      const newImages = images.filter((_, i) => i !== index)
-      onChange(newImages)
+    async (index: number) => {
+      const image = images[index]
+      
+      // 如果是已存在的图片，调用删除回调
+      if (isExistingImage(image)) {
+        if (onDeleteExisting) {
+          setDeletingIds(prev => new Set(prev).add(image.id))
+          try {
+            await onDeleteExisting(image.id, image.storage_path)
+            const newImages = images.filter((_, i) => i !== index)
+            onChange(newImages)
+          } catch (error) {
+            console.error('删除图片失败:', error)
+            alert('删除失败，请重试')
+          } finally {
+            setDeletingIds(prev => {
+              const next = new Set(prev)
+              next.delete(image.id)
+              return next
+            })
+          }
+        }
+      } else {
+        // 新上传的文件，直接从列表移除
+        const newImages = images.filter((_, i) => i !== index)
+        onChange(newImages)
+      }
     },
-    [images, onChange]
+    [images, onChange, onDeleteExisting]
   )
 
   // 生成预览 URL
-  const getPreviewUrl = (file: File) => URL.createObjectURL(file)
+  const getPreviewUrl = (item: ImageItem) => {
+    return isExistingImage(item) ? item.url : URL.createObjectURL(item)
+  }
 
   // 根据图片数量决定网格布局
   const getGridClass = () => {
@@ -89,34 +128,38 @@ export default function ImageUploader({
       {/* 已选图片预览 */}
       {images.length > 0 && (
         <div className={`grid ${getGridClass()} gap-2`}>
-          {images.map((file, index) => (
-            <div
-              key={index}
-              className={`relative rounded-lg overflow-hidden bg-foreground/5 ${
-                images.length === 1 ? '' : 'aspect-square'
-              }`}
-            >
-              <img
-                src={getPreviewUrl(file)}
-                alt={`预览 ${index + 1}`}
-                className={`w-full object-contain ${
-                  images.length === 1 
-                    ? 'h-auto max-h-[200px]' 
-                    : 'h-full'
-                }`}
-              />
-              {/* 删除按钮 */}
-              <Button
-                type="button"
-                variant="secondary"
-                size="icon"
-                className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/50 hover:bg-black/70 text-white"
-                onClick={() => removeImage(index)}
+          {images.map((item, index) => {
+            const isDeleting = isExistingImage(item) && deletingIds.has(item.id)
+            return (
+              <div
+                key={isExistingImage(item) ? item.id : index}
+                className={`relative rounded-lg overflow-hidden bg-foreground/5 ${
+                  images.length === 1 ? '' : 'aspect-square'
+                } ${isDeleting ? 'opacity-50' : ''}`}
               >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
+                <img
+                  src={getPreviewUrl(item)}
+                  alt={`预览 ${index + 1}`}
+                  className={`w-full object-contain ${
+                    images.length === 1 
+                      ? 'h-auto max-h-[200px]' 
+                      : 'h-full'
+                  }`}
+                />
+                {/* 删除按钮 */}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/50 hover:bg-black/70 text-white"
+                  onClick={() => removeImage(index)}
+                  disabled={isDeleting}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            )
+          })}
         </div>
       )}
 
