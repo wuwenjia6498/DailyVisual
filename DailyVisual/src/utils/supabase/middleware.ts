@@ -37,27 +37,25 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // ===== 临时禁用登录验证 =====
   // 定义公开路由（不需要登录即可访问）
-  // const publicRoutes = ['/login']
-  // const isPublicRoute = publicRoutes.some(route => 
-  //   request.nextUrl.pathname.startsWith(route)
-  // )
+  const publicRoutes = ['/login']
+  const isPublicRoute = publicRoutes.some(route => 
+    request.nextUrl.pathname.startsWith(route)
+  )
 
   // 如果用户未登录且访问的不是公开路由，重定向到登录页
-  // if (!user && !isPublicRoute) {
-  //   const url = request.nextUrl.clone()
-  //   url.pathname = '/login'
-  //   return NextResponse.redirect(url)
-  // }
+  if (!user && !isPublicRoute) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
 
   // 如果用户已登录且访问登录页，重定向到首页
-  // if (user && request.nextUrl.pathname === '/login') {
-  //   const url = request.nextUrl.clone()
-  //   url.pathname = '/'
-  //   return NextResponse.redirect(url)
-  // }
-  // ===== 结束：临时禁用登录验证 =====
+  if (user && request.nextUrl.pathname === '/login') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/'
+    return NextResponse.redirect(url)
+  }
 
   return supabaseResponse
 }
